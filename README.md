@@ -2,6 +2,8 @@
 
 A web-based memory training application built with **vanilla JavaScript**, HTML, and CSS. This app helps users improve their recall skills by memorizing text snippets and practicing accurate typing with immediate feedback
 
+https://angelohcf.github.io/Memory-Game/
+
 ---
 
 ## Overview
