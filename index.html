@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memorize Anything</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="script.js" type="module" defer></script>
+  </head>
+  <body>
+    <nav>
+      <h1 class="title">Memorize Anything</h1>
+      <hr />
+    </nav>
+
+    <div id="main-container">
+      <section>
+        <h1 id="item-description"></h1>
+        <h1 id="what-user-wrote"></h1>
+      </section>
+      <input id="user-guess" />
+      <button id="start-btn">Start</button>
+    </div>
+
+    <div id="storage-container">
+      <button id="create-btn">Create new Item</button>
+      <button id="history-btn">Game History</button>
+
+      <section id="stored-items"></section>
+    </div>
+    <div id="overlay" class="hide"></div>
+    <div id="modal" class="hide">
+      <button id="modal-close-btn">Close</button>
+      <input id="modal-input" />
+      <button id="modal-save-btn">Save</button>
+    </div>
+    <div id="history-modal" class="hide">
+      <h1 id="chosen-item-display"></h1>
+      <section id="guesses-history">There's nothing in your history!</section>
+    </div>
+  </body>
+</html>
