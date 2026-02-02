@@ -25,6 +25,7 @@
     <div id="storage-container">
       <button id="create-btn">Create new Item</button>
       <button id="history-btn">Game History</button>
+      <button id="help-btn">Help</button>
 
       <section id="stored-items"></section>
     </div>
@@ -37,6 +38,72 @@
     <div id="history-modal" class="hide">
       <h1 id="chosen-item-display"></h1>
       <section id="guesses-history">There's nothing in your history!</section>
+    </div>
+    <div id="help-modal" class="hide">
+      <h1>How to Use Memorize Anything</h1>
+
+      <div class="help-content">
+        <div class="help-step">
+          <h3>Step 1: Choose What to Memorize</h3>
+          <p>
+            Select an existing item from your list, or click "Create" to add
+            something new (quotes, facts, anything you want to remember!).
+          </p>
+        </div>
+
+        <div class="help-step">
+          <h3>Step 2: Start the Game</h3>
+          <p>
+            Click the "Start" button. The text will appear on screen for you to
+            read and memorize.
+          </p>
+        </div>
+
+        <div class="help-step">
+          <h3>Step 3: Begin Memorizing</h3>
+          <p>
+            When you're ready, press <kbd>Enter</kbd> to hide the text and start
+            typing.
+          </p>
+        </div>
+
+        <div class="help-step">
+          <h3>Step 4: Type What You Remember</h3>
+          <p>
+            Type the text from memory as accurately as you can. Press
+            <kbd>Enter</kbd> to submit your guess.
+          </p>
+        </div>
+
+        <div class="help-step">
+          <h3>Step 5: Review Your Answer</h3>
+          <p>
+            Correct letters appear in <span class="right">green</span>,
+            incorrect ones in <span class="wrong">red</span>. Press
+            <kbd>Enter</kbd> again to continue practicing.
+          </p>
+        </div>
+
+        <div class="help-step">
+          <h3>Step 6: Check Your Progress</h3>
+          <p>
+            Click "History" to see all your attempts and track your improvement!
+          </p>
+        </div>
+      </div>
+
+      <div class="help-tips">
+        <h3>💡 Tips</h3>
+        <ul>
+          <li>
+            Take your time reading - the text stays until you press
+            <kbd>Enter</kbd>
+          </li>
+          <li>Keep practicing until you can type it perfectly from memory</li>
+          <li>Use "Delete" to remove items you no longer need</li>
+          <li>Click "Stop" anytime to end your session</li>
+        </ul>
+      </div>
     </div>
   </body>
 </html>

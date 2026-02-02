@@ -1,248 +1,291 @@
-// HTML Elements
-const startButton = document.getElementById("start-btn");
-const createButton = document.getElementById("create-btn");
-const modalCloseButton = document.getElementById("modal-close-btn");
-const modalSaveButton = document.getElementById("modal-save-btn");
-const modalInput = document.getElementById("modal-input");
-const userGuess = document.getElementById("user-guess");
-const whatUserWroteElement = document.getElementById("what-user-wrote");
+// HTML Elements - Query DOM once and store references
+const elements = {
+  startButton: document.getElementById("start-btn"),
+  createButton: document.getElementById("create-btn"),
+  modalCloseButton: document.getElementById("modal-close-btn"),
+  modalSaveButton: document.getElementById("modal-save-btn"),
+  modalInput: document.getElementById("modal-input"),
+  userGuess: document.getElementById("user-guess"),
+  whatUserWroteElement: document.getElementById("what-user-wrote"),
+  modalContainer: document.getElementById("modal"),
+  storedItems: document.getElementById("stored-items"),
+  overlay: document.getElementById("overlay"),
+  historyModal: document.getElementById("history-modal"),
+  guessHistory: document.getElementById("guesses-history"),
+  chosenItemDisplay: document.getElementById("chosen-item-display"),
+  historyButton: document.getElementById("history-btn"),
+  itemDescription: document.getElementById("item-description"),
+  helpModal: document.getElementById("help-modal"),
+  helpButton: document.getElementById("help-btn"),
+};
 
-const modalContainer = document.getElementById("modal");
-const storedItemsContainer = document.getElementById("stored-items");
-const overlay = document.getElementById("overlay");
+// Game State
+const gameState = {
+  running: false,
+  chosenItem: null,
+  chosenItemLetters: null,
+  history: [],
+};
 
-const historyModal = document.getElementById("history-modal");
-const guessHistory = document.getElementById("guesses-history");
-const chosenItemDisplay = document.getElementById("chosen-item-display");
-const historyButton = document.getElementById("history-btn");
+// Data Management
+const itemsManager = {
+  get items() {
+    return (
+      JSON.parse(localStorage.getItem("items")) || [
+        "You can measure the size of the person by what makes him or her angry",
+        "You stop being insecure once you realize you can't be perfect",
+        "Peace grows when you stop needing approval",
+        "Growth starts the moment excuses end",
+        "Discipline is choosing what you want most over what you want now",
+        "Most people don't lack potential, they lack patience with the process that turns effort into results",
+      ]
+    );
+  },
 
-const itemDescription = document.getElementById("item-description");
+  save(items) {
+    localStorage.setItem("items", JSON.stringify(items));
+  },
 
-// Declaring Variables
-let gameRunning = false;
-const items = JSON.parse(localStorage.getItem("items")) || [
-  "You can measure the size of the person by what makes him or her angry",
-  `You stop being insecure once you find out you can’t be perfect
-`,
-];
-let chosenItem = null;
-let chosenItemLetters = null;
-const historyGame = [];
+  add(item) {
+    const items = this.items;
+    items.push(item);
+    this.save(items);
+  },
 
-// Event Listeners
-startButton.addEventListener("click", () => {
-  startGame();
-});
+  remove(index) {
+    const items = this.items;
+    items.splice(index, 1);
+    this.save(items);
+  },
+};
 
-createButton.addEventListener("click", () => {
-  openModal();
-});
+// Event Handlers
+const handlers = {
+  guessEnter: null,
+  escape: null,
+  overlayClick: null,
+};
 
-modalCloseButton.addEventListener("click", () => {
-  hideModal();
-});
+// Event Listeners Setup
+const setupEventListeners = () => {
+  elements.startButton.addEventListener("click", startGame);
+  elements.createButton.addEventListener("click", openModal);
+  elements.modalCloseButton.addEventListener("click", hideModal);
+  elements.modalSaveButton.addEventListener("click", saveItem);
+  elements.historyButton.addEventListener("click", openHistoryModal);
+  elements.helpButton.addEventListener("click", openHelpModal);
 
-modalSaveButton.addEventListener("click", () => {
-  saveItem();
-});
+  elements.modalInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") saveItem();
+  });
 
-historyButton.addEventListener("click", () => {
-  openHistoryModal();
-});
+  // Event delegation for item selection and deletion
+  elements.storedItems.addEventListener("click", (e) => {
+    const itemContainer = e.target.closest(".item-container");
+    const deleteButton = e.target.closest(".item-delete-button");
 
-modalInput.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") {
-    saveItem();
-  }
-});
+    if (deleteButton && itemContainer) {
+      e.stopPropagation();
+      const index = Array.from(elements.storedItems.children).indexOf(
+        itemContainer,
+      );
+      deleteItem(index);
+    } else if (itemContainer) {
+      const entry = itemContainer.dataset.item;
+      chooseItem(entry, itemContainer);
+    }
+  });
+};
 
-// Functions
+// Game Missing
 const startGame = () => {
-  if (!chosenItem && !gameRunning) {
+  if (!gameState.chosenItem && !gameState.running) {
     alert("Please select something you want to memorize!");
     return;
   }
-  if (gameRunning) {
-    // remove event listener
-    document.removeEventListener("keydown", handleGuessEnter);
 
-    startButton.innerHTML = "Start";
-    listHistory();
-    historyGame.length = 0;
-    storedItemsContainer.classList.remove("hide");
-    gameRunning = false;
+  if (gameState.running) {
+    stopGame();
     return;
   }
-  startButton.innerHTML = "Stop";
-  setTimeout(
-    () => {
-      userGuess.disabled = false;
-      itemDescription.innerHTML = "";
-      whatUserWroteElement.innerHTML = "";
-      userGuess.focus();
-    },
-    chosenItem.split("").length * 50,
-  );
-  // event listener
-  document.addEventListener("keydown", handleGuessEnter);
 
-  // Starting Game
-  chosenItemLetters = chosenItem.trim().toLowerCase().split("");
-  storedItemsContainer.classList.add("hide");
-  itemDescription.innerText = chosenItem.toLowerCase();
-  userGuess.disabled = true;
-  gameRunning = true;
+  // Start Game
+  elements.whatUserWroteElement.textContent = "";
+  elements.startButton.textContent = "Stop";
+  gameState.running = true;
+  gameState.chosenItemLetters = gameState.chosenItem
+    .trim()
+    .toLowerCase()
+    .split("");
+  gameState.history = [];
+
+  elements.storedItems.classList.add("hide");
+  elements.itemDescription.textContent = gameState.chosenItem.toLowerCase();
+
+  handlers.guessEnter = handleGuessEnter;
+  document.addEventListener("keydown", handlers.guessEnter);
+  elements.startButton.blur();
+  elements.userGuess.disabled = true;
+};
+
+const stopGame = () => {
+  // Clean up event listener
+  if (handlers.guessEnter) {
+    document.removeEventListener("keydown", handlers.guessEnter);
+    handlers.guessEnter = null;
+  }
+
+  elements.startButton.textContent = "Start";
+  listHistory();
+  elements.storedItems.classList.remove("hide");
+  gameState.running = false;
 };
 
 const handleGuessEnter = (e) => {
-  const Enter = e.key === "Enter";
-  const buttonDisabled = userGuess.disabled;
+  if (e.key !== "Enter" || !gameState.running) return;
 
-  if (Enter && gameRunning && !buttonDisabled) {
+  if (!elements.userGuess.disabled) {
     checkUsersGuess();
-  }
-  if (Enter && gameRunning && buttonDisabled) {
-    handleNext(e);
-  }
-  clearInterval();
-};
-
-const listHistory = () => {
-  guessHistory.innerHTML = "";
-  chosenItemDisplay.innerHTML = chosenItem;
-  for (let i = 0; i < historyGame.length; i++) {
-    const wrapper = document.createElement("div");
-
-    const number = document.createElement("p");
-    number.innerHTML = i + 1;
-    const guess = document.createElement("p");
-    guess.innerHTML = historyGame[i];
-
-    wrapper.append(number, guess);
-
-    guessHistory.appendChild(wrapper);
-  }
-};
-
-const hideItem = () => {
-  setTimeout(() => {
-    userGuess.disabled = false;
-    itemDescription.innerHTML = "";
-    whatUserWroteElement.innerHTML = "";
-    userGuess.focus();
-  }, 3000);
-};
-
-const checkUsersGuess = () => {
-  if (!gameRunning || !chosenItem) return;
-  if (userGuess.disabled === true) return;
-  const value = userGuess.value.toLowerCase().trim();
-  userGuess.disabled = true;
-  historyGame.push(value);
-  if (value === chosenItem) {
-    compareAnswer(value);
-    hideItem();
   } else {
-    compareAnswer(value);
-  }
-  userGuess.value = "";
-};
-
-const compareAnswer = (value) => {
-  const letterCheck = value.trim().split("");
-  const answerDisplay = document.createElement("h1");
-
-  for (let i = 0; i < letterCheck.length; i++) {
-    if (letterCheck[i] === chosenItemLetters[i]) {
-      const span = document.createElement("span");
-      span.innerHTML = letterCheck[i];
-      span.classList.add("right");
-      answerDisplay.appendChild(span);
-    } else if (letterCheck[i] !== chosenItemLetters[i]) {
-      const span = document.createElement("span");
-      span.innerHTML = letterCheck[i];
-      span.classList.add("wrong");
-      answerDisplay.appendChild(span);
-    }
-  }
-  whatUserWroteElement.appendChild(answerDisplay);
-  itemDescription.innerHTML = chosenItem.toLowerCase().trim();
-};
-
-const handleNext = (e) => {
-  if (e.key === "Enter") {
     moveOn();
   }
 };
 
+const checkUsersGuess = () => {
+  if (
+    !gameState.running ||
+    !gameState.chosenItem ||
+    elements.userGuess.disabled
+  )
+    return;
+
+  const value = elements.userGuess.value.toLowerCase().trim();
+  elements.userGuess.disabled = true;
+  gameState.history.push(value);
+
+  compareAnswer(value);
+  elements.userGuess.value = "";
+};
+
+const compareAnswer = (value) => {
+  const userLetters = value.replace(/\s+/g, " ").split("");
+  const answerDisplay = document.createElement("h1");
+  console.log(userLetters);
+
+  userLetters.forEach((letter, i) => {
+    const span = document.createElement("span");
+    span.textContent = letter;
+    span.classList.add(
+      letter === gameState.chosenItemLetters[i] ? "right" : "wrong",
+    );
+    answerDisplay.appendChild(span);
+  });
+
+  elements.whatUserWroteElement.appendChild(answerDisplay);
+  elements.itemDescription.textContent = gameState.chosenItem
+    .toLowerCase()
+    .trim();
+};
+
 const moveOn = () => {
-  console.log("Hello");
-  userGuess.disabled = false;
-  itemDescription.innerHTML = "";
-  whatUserWroteElement.innerHTML = "";
-  userGuess.focus();
+  elements.userGuess.disabled = false;
+  elements.itemDescription.textContent = "";
+  elements.whatUserWroteElement.textContent = "";
+  elements.userGuess.focus();
+};
+
+// History
+const listHistory = () => {
+  elements.guessHistory.innerHTML = "";
+  elements.chosenItemDisplay.textContent = gameState.chosenItem;
+
+  gameState.history.forEach((guess, i) => {
+    const wrapper = document.createElement("div");
+
+    const number = document.createElement("p");
+    number.textContent = i + 1;
+
+    const guessText = document.createElement("p");
+    guessText.textContent = guess;
+
+    wrapper.append(number, guessText);
+    elements.guessHistory.appendChild(wrapper);
+  });
 };
 
 const openHistoryModal = () => {
   hideModal();
-  document.addEventListener("keydown", handleEscape);
-  overlay.addEventListener("click", hideModal);
+  showModal(elements.historyModal);
+};
 
-  historyModal.classList.toggle("hide");
-  overlay.classList.toggle("hide");
+const openHelpModal = () => {
+  hideModal();
+  showModal(elements.helpModal);
 };
 
 const openModal = () => {
-  document.addEventListener("keydown", handleEscape);
-  overlay.addEventListener("click", hideModal);
+  showModal(elements.modalContainer);
+};
 
-  modalContainer.classList.toggle("hide");
-  overlay.classList.toggle("hide");
+const showModal = (modal) => {
+  handlers.escape = handleEscape;
+  handlers.overlayClick = hideModal;
+
+  document.addEventListener("keydown", handlers.escape);
+  elements.overlay.addEventListener("click", handlers.overlayClick);
+
+  modal.classList.remove("hide");
+  elements.overlay.classList.remove("hide");
 };
 
 const hideModal = () => {
-  historyModal.classList.add("hide");
-  modalContainer.classList.add("hide");
-  overlay.classList.add("hide");
+  elements.historyModal.classList.add("hide");
+  elements.helpModal.classList.add("hide");
+  elements.modalContainer.classList.add("hide");
+  elements.overlay.classList.add("hide");
 
-  overlay.removeEventListener("click", hideModal);
-  document.removeEventListener("keydown", handleEscape);
-};
+  if (handlers.overlayClick) {
+    elements.overlay.removeEventListener("click", handlers.overlayClick);
+    handlers.overlayClick = null;
+  }
 
-const handleEscape = (e) => {
-  if (e.key === "Escape") {
-    hideModal();
+  if (handlers.escape) {
+    document.removeEventListener("click", handlers.escape);
+    handlers.overlayClick = null;
   }
 };
 
+const handleEscape = (e) => {
+  if (e.key === "Escape") hideModal();
+};
+
 const saveItem = () => {
-  const value = modalInput.value.trim();
+  const value = elements.modalInput.value.trim().replace(/\s+/g, " ");
   if (!value) return;
 
-  modalInput.value = "";
+  elements.modalInput.value = "";
   hideModal();
 
-  items.push(value);
-  localStorage.setItem("items", JSON.stringify(items));
+  itemsManager.add(value);
   loadItems();
 };
 
 const deleteItem = (index) => {
-  items.splice(index, 1);
-  localStorage.setItem("items", JSON.stringify(items));
+  itemsManager.remove(index);
   loadItems();
 };
 
 const chooseItem = (entry, element) => {
   if (element.classList.contains("chosen")) {
-    chosenItem = null;
-    chosenItemLetters = null;
+    gameState.chosenItem = null;
+    gameState.chosenItemLetters = null;
     element.classList.remove("chosen");
     return;
   }
-  chosenItem = entry;
 
-  document.querySelectorAll(".item-container").forEach((el) => {
+  gameState.chosenItem = entry;
+
+  elements.storedItems.querySelectorAll(".item-container").forEach((el) => {
     el.classList.remove("chosen");
   });
 
@@ -250,32 +293,28 @@ const chooseItem = (entry, element) => {
 };
 
 const loadItems = () => {
-  storedItemsContainer.innerHTML = "";
-  items.forEach((entry, index) => {
+  const items = itemsManager.items;
+  elements.storedItems.innerHTML = "";
+
+  items.forEach((entry) => {
     const divElement = document.createElement("div");
     divElement.classList.add("item-container");
-    divElement.addEventListener("click", () => {
-      chooseItem(entry, divElement);
-    });
+    divElement.dataset.item = entry; // Store item in data attribute
+
     const headingElement = document.createElement("h2");
     headingElement.textContent = entry;
     headingElement.classList.add("item-heading");
+
     const buttonElement = document.createElement("button");
-    buttonElement.addEventListener("click", () => {
-      deleteItem(index);
-    });
     buttonElement.classList.add("item-delete-button");
-    buttonElement.innerText = "Delete";
+    buttonElement.textContent = "Delete";
 
     divElement.append(headingElement, buttonElement);
-
-    storedItemsContainer.appendChild(divElement);
+    elements.storedItems.appendChild(divElement);
   });
 };
 
-// Window on load
 window.addEventListener("DOMContentLoaded", () => {
-  if (items) {
-    loadItems();
-  }
+  setupEventListeners();
+  loadItems();
 });
