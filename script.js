@@ -3,6 +3,7 @@ const elements = {
   startButton: document.getElementById("start-btn"),
   createButton: document.getElementById("create-btn"),
   modalCloseButton: document.getElementById("modal-close-btn"),
+  modalCancelButton: document.getElementById("modal-cancel-btn"),
   modalSaveButton: document.getElementById("modal-save-btn"),
   modalInput: document.getElementById("modal-input"),
   userGuess: document.getElementById("user-guess"),
@@ -17,6 +18,7 @@ const elements = {
   itemDescription: document.getElementById("item-description"),
   helpModal: document.getElementById("help-modal"),
   helpButton: document.getElementById("help-btn"),
+  confirmDelete: document.getElementById("confirm-delete-modal"),
 };
 
 // Game State
@@ -71,6 +73,7 @@ const setupEventListeners = () => {
   elements.startButton.addEventListener("click", startGame);
   elements.createButton.addEventListener("click", openModal);
   elements.modalCloseButton.addEventListener("click", hideModal);
+  elements.modalCancelButton.addEventListener("click", hideModal);
   elements.modalSaveButton.addEventListener("click", saveItem);
   elements.historyButton.addEventListener("click", openHistoryModal);
   elements.helpButton.addEventListener("click", openHelpModal);
@@ -85,15 +88,26 @@ const setupEventListeners = () => {
     const deleteButton = e.target.closest(".item-delete-button");
 
     if (deleteButton && itemContainer) {
+      showModal(elements.confirmDelete);
+      const modalDelButton = document.getElementById("modal-delete-button");
+
       e.stopPropagation();
+
       const index = Array.from(elements.storedItems.children).indexOf(
         itemContainer,
       );
-      deleteItem(index);
+      modalDelButton.addEventListener("click", () => deleteItem(index), {
+        once: true,
+      }); // { once: true } automatically removes itself after running once
     } else if (itemContainer) {
       const entry = itemContainer.dataset.item;
       chooseItem(entry, itemContainer);
     }
+
+    // click delete
+    // modal pops up
+    // Modal asks, "Are you sure you want to delete this?"
+    // Buttons: Cancel / Delete
   });
 };
 
@@ -170,7 +184,6 @@ const checkUsersGuess = () => {
 const compareAnswer = (value) => {
   const userLetters = value.replace(/\s+/g, " ").split("");
   const answerDisplay = document.createElement("h1");
-  console.log(userLetters);
 
   userLetters.forEach((letter, i) => {
     const span = document.createElement("span");
@@ -242,6 +255,7 @@ const hideModal = () => {
   elements.historyModal.classList.add("hide");
   elements.helpModal.classList.add("hide");
   elements.modalContainer.classList.add("hide");
+  elements.confirmDelete.classList.add("hide");
   elements.overlay.classList.add("hide");
 
   if (handlers.overlayClick) {
@@ -271,8 +285,10 @@ const saveItem = () => {
 };
 
 const deleteItem = (index) => {
+  hideModal();
   itemsManager.remove(index);
   loadItems();
+  // remove event listener
 };
 
 const chooseItem = (entry, element) => {

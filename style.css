@@ -303,7 +303,7 @@ hr {
 .item-delete-button {
   background: rgba(220, 38, 38, 0.15);
   color: #fca5a5;
-  padding: 0.5rem 1rem;
+  padding: 0.625rem 1.25rem;
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 500;
@@ -424,6 +424,71 @@ hr {
 
 #modal-save-btn:active {
   transform: translateY(0) scale(1);
+}
+
+#confirm-delete-modal {
+  background: var(--modal-background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  position: fixed;
+  z-index: 10;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-height: 280px;
+  width: min(500px, 90vw);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: var(--primary-text-color);
+  gap: 1.5rem;
+  padding: 2.5rem;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  animation: scaleIn 0.3s var(--transition-bounce) both;
+}
+
+#confirm-delete-modal div {
+  display: flex;
+  gap: 1.5rem;
+}
+
+#modal-cancel-btn {
+  padding: 0.625rem 1.25rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: rgba(220, 38, 38, 0.15);
+  color: #fca5a5;
+  border-radius: 8px;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  transition: all var(--transition-smooth);
+}
+
+#modal-cancel-btn:hover {
+  background-color: var(--danger-color);
+  color: white;
+  border-color: var(--danger-color);
+  transform: scale(1.03);
+}
+
+#modal-delete-button {
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: linear-gradient(135deg, var(--success-bg) 0%, #15803d 100%);
+  color: white;
+  border-radius: 8px;
+  border: none;
+  transition: all var(--transition-smooth);
+  box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
+}
+
+#modal-delete-button:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(22, 163, 73, 0.3);
 }
 
 .wrong {
